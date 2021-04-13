@@ -217,6 +217,8 @@ NOTE: This command does a synchronization of the files, so you never risk overwr
 
 Forking this git repo will allow you to fully customize your own version of factotum, while retaining the capability to merge in improvements made to the mainstream repo and contribute your own improvements back to it.
 
+You will typically want to make your fork private, as it may contain sensitive information you don't want to share with the world. However, Github does not allow making forked repositories private, so you must duplicate the repo instead, according to those [instructions](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/duplicating-a-repository).
+
 ## Set up container repo
 
 You can host your factotum images on any container registry, such as Docker Hub, AWS ECR or Google GCR.
