@@ -1,17 +1,17 @@
 # Commands
 
-- factotum use [context or "none"]
+- factotum use [context or "base" or "none"]
   - validates context
   - saves context in `~/.factotum/state.yaml`
-  - omitting context prompts for context from list of available contexts + "none"
-- factotum start [context or "none"]
+  - omitting context prompts for context from list of available contexts + "base" + "none"
+- factotum start [context or "base"]
   - omitting context uses current context or prompts for context
   - reads `~/.factotum/state.yaml`
   - if no version set yet, does a `factotum upgrade`
   - merges env vars and volume mounts from `shared.yaml` and `user.yaml`
   - keep only volume mounts that exist locally
   - starts docker container
-- factotum stop [context or "all"]
+- factotum stop [context or "base" or "none" or "all"]
   - omitting context prompts for context
 - factotum list
   - contexts
@@ -40,19 +40,20 @@
 # Config files structure
 
 - ~/.factotum/
-  - settings.yaml
-  - user.yaml (user-specific overrides)
+  - state.yaml
+  - user.yaml: user-specific config overrides
 - Factotum Git Repo Clone Dir
   - config
-    - shared.yaml (company-wide base values)
-    - user.yaml (default user configs, copied to home during install)
+    - shared.yaml: base configs shared by all users
+    - user.yaml: default user config file copied to home during install
 
 # ~/.factotum/state.yaml file format
 
 ```yaml
-clone: /Users/mathieu/dev/factotum
-version: 1.2.3
-context: cluster1
+version: 2021.04
+cloneDir: /Users/mathieu/dev/factotum
+imageVersion: 1.2.3
+currentContext: cluster1
 ```
 
 # Config files format
@@ -62,25 +63,26 @@ container:
   registry: dockerhub # supported values are `gcr`, `ecr` and `dockerhub`
   image: silphid/factotum
 
+base:
+  env:
+    CLOUD: aws # supported clouds: aws, gcp
+    REGION: us-east-1
+
+  volumes:
+    $HOME/.ssh: /root/.ssh
+    $HOME/.gitconfig: /root/.gitconfig
+    $HOME/.aws: /root/.aws
+    $HOME/.config/gh: /root/.config/gh
+    $HOME/.cfconfig: /root/.cfconfig
+
 contexts:
-  - name: cluster1
+  cluster1:
     env:
       KUBE_CONTEXT: cluster1
       # REGION: us-east-2
-  - name: cluster2
+  cluster2:
     env:
       KUBE_CONTEXT: cluster2
-
-env:
-  CLOUD: aws # supported clouds: aws, gcp
-  REGION: us-east-1
-
-volumes:
-  $HOME/.ssh: /root/.ssh
-  $HOME/.gitconfig: /root/.gitconfig
-  $HOME/.aws: /root/.aws
-  $HOME/.config/gh: /root/.config/gh
-  $HOME/.cfconfig: /root/.cfconfig
 ```
 
 # Installation
