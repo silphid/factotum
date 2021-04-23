@@ -1,10 +1,11 @@
-package configfile
+package cfg
 
 import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/silphid/factotum/cli/src/internal/ctx"
 	"github.com/silphid/factotum/cli/src/internal/helpers"
 	"gopkg.in/yaml.v2"
 )
@@ -32,31 +33,12 @@ type Container struct {
 	Image    string
 }
 
-// Context represents an execution context for factotum (env vars and volumes)
-type Context struct {
-	Env     map[string]string
-	Volumes map[string]string
-}
-
 // Config represents factotum's current config persisted to disk
 type Config struct {
 	Version   string
 	Container Container
-	Base      Context
-	Contexts  map[string]Context
-}
-
-// Save saves config file to given directory
-func (s Config) Save(dir, fileName string) error {
-	s.Version = currentVersion
-
-	doc, err := yaml.Marshal(s)
-	if err != nil {
-		return err
-	}
-
-	path := filepath.Join(dir, fileName)
-	return ioutil.WriteFile(path, doc, 0644)
+	Base      ctx.Context
+	Contexts  map[string]ctx.Context
 }
 
 // Load loads the config file from given directory
@@ -83,31 +65,55 @@ func Load(dir, fileName string) (*Config, error) {
 	return &config, nil
 }
 
-func copyContext(source, target *Context) {
-	if target.Env == nil {
-		target.Env = make(map[string]string)
+// Clone returns a deep-copy of this config
+func (c Config) Clone() Config {
+	var config Config
+	config.Container.Registry = c.Container.Registry
+	config.Container.Image = c.Container.Image
+	config.Base = c.Base.Clone()
+	config.Contexts = make(map[string]ctx.Context, len(c.Contexts))
+	for key, value := range c.Contexts {
+		config.Contexts[key] = value.Clone()
 	}
-	for key, value := range source.Env {
-		target.Env[key] = value
-	}
-
-	if target.Volumes == nil {
-		target.Volumes = make(map[string]string)
-	}
-	for key, value := range source.Volumes {
-		target.Volumes[key] = value
-	}
+	return config
 }
 
-func (c Config) GetContext(name string) (Context, error) {
-	// No context
-	if name == ContextNone {
-		return Context{}, nil
+// Merge creates a deep-copy of this config and copies values from given source config on top of it
+func (c Config) Merge(source Config) Config {
+	config := c.Clone()
+
+	// Container info
+	if source.Container.Registry != "" {
+		config.Container.Registry = source.Container.Registry
+	}
+	if source.Container.Image != "" {
+		config.Container.Image = source.Container.Image
 	}
 
 	// Base context
-	var context Context
-	copyContext(&c.Base, &context)
+	config.Base = c.Base.Merge(source.Base)
+
+	// Named contexts
+	for key, value := range source.Contexts {
+		targetContext := config.Contexts[key]
+		config.Contexts[key] = targetContext.Merge(value)
+	}
+
+	return config
+}
+
+// GetContext returns context with given name merged on top of base context.
+// If name is "base", only the base context is returned.
+// If name is "none", an empty context is returned.
+func (c Config) GetContext(name string) (ctx.Context, error) {
+	// No context
+	var context ctx.Context
+	if name == ContextNone {
+		return context, nil
+	}
+
+	// Base context
+	context = context.Merge(c.Base)
 	if name == ContextBase {
 		return context, nil
 	}
@@ -115,9 +121,7 @@ func (c Config) GetContext(name string) (Context, error) {
 	// Named context
 	namedContext, ok := c.Contexts[name]
 	if !ok {
-		return Context{}, fmt.Errorf("context %q not found", name)
+		return ctx.Context{}, fmt.Errorf("context %q not found", name)
 	}
-	copyContext(&namedContext, &context)
-
-	return context, nil
+	return context.Merge(namedContext), nil
 }

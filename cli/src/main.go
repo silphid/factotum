@@ -1,14 +1,14 @@
 package main
 
-import (
-	"os"
-)
+// import (
+// 	"os"
+// )
 
-var version string
+// var version string
 
 func main() {
-	rootCmd := cmd.NewRoot(version)
-	if err := rootCmd.Execute(); err != nil {
-		os.Exit(-1)
-	}
+	// rootCmd := cmd.NewRoot(version)
+	// if err := rootCmd.Execute(); err != nil {
+	// 	os.Exit(-1)
+	// }
 }
