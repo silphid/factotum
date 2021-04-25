@@ -68,6 +68,7 @@ func Load(dir, fileName string) (*Config, error) {
 // Clone returns a deep-copy of this config
 func (c Config) Clone() Config {
 	var config Config
+	config.Version = c.Version
 	config.Container.Registry = c.Container.Registry
 	config.Container.Image = c.Container.Image
 	config.Base = c.Base.Clone()
@@ -81,6 +82,9 @@ func (c Config) Clone() Config {
 // Merge creates a deep-copy of this config and copies values from given source config on top of it
 func (c Config) Merge(source Config) Config {
 	config := c.Clone()
+	if source.Version != "" {
+		config.Version = source.Version
+	}
 
 	// Container info
 	if source.Container.Registry != "" {
