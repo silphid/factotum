@@ -18,27 +18,11 @@ const (
 	ContextNone    = "none"
 )
 
-// RegistryType represents the type of docker registry factotum image should be retrieved from
-type RegistryType string
-
-const (
-	RegistryGCR       RegistryType = "gcr"
-	RegistryECR       RegistryType = "ecr"
-	RegistryDockerHub RegistryType = "dockerhub"
-)
-
-// Container represents the information on how to retrieve factotum docker image
-type Container struct {
-	Registry RegistryType
-	Image    string
-}
-
 // Config represents factotum's current config persisted to disk
 type Config struct {
-	Version   string
-	Container Container
-	Base      ctx.Context
-	Contexts  map[string]ctx.Context
+	Version  string
+	Base     ctx.Context
+	Contexts map[string]ctx.Context
 }
 
 // Load loads the config file from given directory
@@ -69,8 +53,6 @@ func Load(dir, fileName string) (*Config, error) {
 func (c Config) Clone() Config {
 	var config Config
 	config.Version = c.Version
-	config.Container.Registry = c.Container.Registry
-	config.Container.Image = c.Container.Image
 	config.Base = c.Base.Clone()
 	config.Contexts = make(map[string]ctx.Context, len(c.Contexts))
 	for key, value := range c.Contexts {
@@ -84,14 +66,6 @@ func (c Config) Merge(source Config) Config {
 	config := c.Clone()
 	if source.Version != "" {
 		config.Version = source.Version
-	}
-
-	// Container info
-	if source.Container.Registry != "" {
-		config.Container.Registry = source.Container.Registry
-	}
-	if source.Container.Image != "" {
-		config.Container.Image = source.Container.Image
 	}
 
 	// Base context

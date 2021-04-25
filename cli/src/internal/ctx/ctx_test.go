@@ -1,6 +1,7 @@
 package ctx
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/go-test/deep"
@@ -10,7 +11,9 @@ import (
 func TestClone(t *testing.T) {
 	assert := _assert.New(t)
 
-	context := Context{
+	original := Context{
+		Registry: RegistryECR,
+		Image:    "image",
 		Env: map[string]string{
 			"ENV1": "value1",
 			"ENV2": "value2",
@@ -21,12 +24,14 @@ func TestClone(t *testing.T) {
 		},
 	}
 
-	clone := context.Clone()
+	clone := original.Clone()
 
-	diff := deep.Equal(context, clone)
+	diff := deep.Equal(original, clone)
 	if diff != nil {
 		assert.Fail("Cloned context different from original", diff)
 	}
+
+	assertNotSameMapStringString(t, original.Env, clone.Env)
 }
 
 func TestMerge(t *testing.T) {
@@ -73,4 +78,13 @@ func TestMerge(t *testing.T) {
 	if diff != nil {
 		assert.Fail("Merged context different from expected context", diff)
 	}
+
+	assertNotSameMapStringString(t, merged.Env, context1.Env)
+	assertNotSameMapStringString(t, merged.Env, context2.Env)
+	assertNotSameMapStringString(t, merged.Volumes, context1.Volumes)
+	assertNotSameMapStringString(t, merged.Volumes, context2.Volumes)
+}
+
+func assertNotSameMapStringString(t *testing.T, map1, map2 map[string]string, msgAndArgs ...interface{}) {
+	_assert.NotEqual(t, reflect.ValueOf(map1).Pointer(), reflect.ValueOf(map2).Pointer(), msgAndArgs)
 }

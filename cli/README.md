@@ -59,11 +59,10 @@ currentContext: cluster1
 # Config files format
 
 ```yaml
-container:
+base:
   registry: dockerhub # supported values are `gcr`, `ecr` and `dockerhub`
   image: silphid/factotum
 
-base:
   env:
     CLOUD: aws # supported clouds: aws, gcp
     REGION: us-east-1

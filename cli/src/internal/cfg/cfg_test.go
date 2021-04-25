@@ -14,11 +14,9 @@ func TestClone(t *testing.T) {
 
 	original := Config{
 		Version: "version",
-		Container: Container{
-			Registry: RegistryECR,
-			Image:    "image",
-		},
 		Base: ctx.Context{
+			Registry: ctx.RegistryECR,
+			Image:    "image",
 			Env: map[string]string{
 				"ENV1": "value1",
 				"ENV2": "value2",
@@ -30,6 +28,8 @@ func TestClone(t *testing.T) {
 		},
 		Contexts: map[string]ctx.Context{
 			"ctx1": {
+				Registry: ctx.RegistryECR,
+				Image:    "image1",
 				Env: map[string]string{
 					"ENV1": "value1",
 					"ENV2": "value2",
@@ -40,6 +40,8 @@ func TestClone(t *testing.T) {
 				},
 			},
 			"ctx2": {
+				Registry: ctx.RegistryECR,
+				Image:    "image1",
 				Env: map[string]string{
 					"ENV3": "value3",
 					"ENV4": "value4",
@@ -73,11 +75,9 @@ func TestMergingEmptyFieldsLeavesUnchanged(t *testing.T) {
 
 	config1 := Config{
 		Version: "version1",
-		Container: Container{
-			Registry: RegistryECR,
-			Image:    "image1",
-		},
 		Base: ctx.Context{
+			Registry: ctx.RegistryECR,
+			Image:    "image",
 			Env: map[string]string{
 				"ENV1": "value1",
 				"ENV2": "value2",
@@ -89,6 +89,8 @@ func TestMergingEmptyFieldsLeavesUnchanged(t *testing.T) {
 		},
 		Contexts: map[string]ctx.Context{
 			"ctx1": {
+				Registry: ctx.RegistryGCR,
+				Image:    "image1",
 				Env: map[string]string{
 					"ENV1": "value1",
 					"ENV2": "value2",
@@ -99,6 +101,8 @@ func TestMergingEmptyFieldsLeavesUnchanged(t *testing.T) {
 				},
 			},
 			"ctx2": {
+				Registry: ctx.RegistryDockerHub,
+				Image:    "image2",
 				Env: map[string]string{
 					"ENV3": "value3",
 					"ENV4": "value4",
@@ -125,11 +129,9 @@ func TestMerge(t *testing.T) {
 
 	config1 := Config{
 		Version: "version1",
-		Container: Container{
-			Registry: RegistryECR,
-			Image:    "image1",
-		},
 		Base: ctx.Context{
+			Registry: ctx.RegistryECR,
+			Image:    "image",
 			Env: map[string]string{
 				"ENV1": "value1",
 				"ENV2": "value2",
@@ -141,6 +143,8 @@ func TestMerge(t *testing.T) {
 		},
 		Contexts: map[string]ctx.Context{
 			"ctx1": {
+				Registry: ctx.RegistryGCR,
+				Image:    "image1",
 				Env: map[string]string{
 					"ENV1": "value1",
 					"ENV2": "value2",
@@ -151,6 +155,8 @@ func TestMerge(t *testing.T) {
 				},
 			},
 			"ctx2": {
+				Registry: ctx.RegistryDockerHub,
+				Image:    "image2",
 				Env: map[string]string{
 					"ENV3": "value3",
 					"ENV4": "value4",
@@ -165,11 +171,9 @@ func TestMerge(t *testing.T) {
 
 	config2 := Config{
 		Version: "version2",
-		Container: Container{
-			Registry: RegistryGCR,
-			Image:    "image2",
-		},
 		Base: ctx.Context{
+			Registry: ctx.RegistryGCR,
+			Image:    "image2",
 			Env: map[string]string{
 				"ENV1": "value1b",
 				"ENV3": "value3",
@@ -181,6 +185,8 @@ func TestMerge(t *testing.T) {
 		},
 		Contexts: map[string]ctx.Context{
 			"ctx1": {
+				Registry: ctx.RegistryECR,
+				Image:    "image2",
 				Env: map[string]string{
 					"ENV1": "value1b",
 					"ENV3": "value3",
@@ -191,6 +197,8 @@ func TestMerge(t *testing.T) {
 				},
 			},
 			"ctx3": {
+				Registry: ctx.RegistryDockerHub,
+				Image:    "image3",
 				Env: map[string]string{
 					"ENV5": "value5",
 					"ENV6": "value6",
@@ -205,11 +213,9 @@ func TestMerge(t *testing.T) {
 
 	expected := Config{
 		Version: "version2",
-		Container: Container{
-			Registry: RegistryGCR,
-			Image:    "image2",
-		},
 		Base: ctx.Context{
+			Registry: ctx.RegistryGCR,
+			Image:    "image2",
 			Env: map[string]string{
 				"ENV1": "value1b",
 				"ENV2": "value2",
@@ -223,6 +229,8 @@ func TestMerge(t *testing.T) {
 		},
 		Contexts: map[string]ctx.Context{
 			"ctx1": {
+				Registry: ctx.RegistryECR,
+				Image:    "image2",
 				Env: map[string]string{
 					"ENV1": "value1b",
 					"ENV2": "value2",
@@ -235,6 +243,8 @@ func TestMerge(t *testing.T) {
 				},
 			},
 			"ctx2": {
+				Registry: ctx.RegistryDockerHub,
+				Image:    "image2",
 				Env: map[string]string{
 					"ENV3": "value3",
 					"ENV4": "value4",
@@ -245,6 +255,8 @@ func TestMerge(t *testing.T) {
 				},
 			},
 			"ctx3": {
+				Registry: ctx.RegistryDockerHub,
+				Image:    "image3",
 				Env: map[string]string{
 					"ENV5": "value5",
 					"ENV6": "value6",
