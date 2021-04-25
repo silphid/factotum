@@ -1,6 +1,7 @@
 package cfg
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/go-test/deep"
@@ -265,21 +266,9 @@ func TestMerge(t *testing.T) {
 }
 
 func assertNotSameMapStringString(t *testing.T, map1, map2 map[string]string, msgAndArgs ...interface{}) {
-	uniqueKey := "041C54FB-E95B-4862-BB53-DCF431771819"
-	map1[uniqueKey] = "dummy value"
-	_, ok := map2[uniqueKey]
-	delete(map1, uniqueKey)
-	if ok {
-		_assert.Fail(t, "both variables should not reference same map instance", msgAndArgs)
-	}
+	_assert.NotEqual(t, reflect.ValueOf(map1).Pointer(), reflect.ValueOf(map2).Pointer(), msgAndArgs)
 }
 
 func assertNotSameMapStringContext(t *testing.T, map1, map2 map[string]ctx.Context, msgAndArgs ...interface{}) {
-	uniqueKey := "041C54FB-E95B-4862-BB53-DCF431771819"
-	map1[uniqueKey] = ctx.Context{}
-	_, ok := map2[uniqueKey]
-	delete(map1, uniqueKey)
-	if ok {
-		_assert.Fail(t, "both variables should not reference same map instance", msgAndArgs)
-	}
+	_assert.NotEqual(t, reflect.ValueOf(map1).Pointer(), reflect.ValueOf(map2).Pointer(), msgAndArgs)
 }
