@@ -101,7 +101,7 @@ contexts:
 
 - User clones factotum git repo to folder where it will permanently reside
 - From repo root, user runs `./install.sh`, which does:
-  - Copies `./config/user.yaml` to `~/.factotum/user.yaml`
+  - Copies git repo `/config/user.yaml` to `~/.factotum/user.yaml`
   - Creates `~/.factotum/
   - Downloads tar.gz file for latest build of cli for current OS and architecture
   - Decompresses and copies to /usr/local/bin
@@ -109,9 +109,9 @@ contexts:
 
 # Todo
 
-- Refactor context resolution/merging order:
-  - Shared base context
-  - User base context
-  - Shared named context
-  - User named context
-- Finish new file-based unit tests + resolution test
+- Add support for multiple images (other than factotum)
+  - Sub-folders under `~/.factotum` and git `/config` that can specify extra
+    `user.yaml` and `shared.yaml` files.
+  - The sub-folder name can be used as a prefix to the context name (ie:
+    `image1/context1`) or we add an extra `factotum image {image1}` command to
+    select it?
