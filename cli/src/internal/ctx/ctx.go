@@ -25,6 +25,11 @@ type Context struct {
 	Volumes  map[string]string
 }
 
+var None = Context{
+	Env:     make(map[string]string),
+	Volumes: make(map[string]string),
+}
+
 // Load loads the context from given file
 func Load(file string) (Context, error) {
 	var context Context

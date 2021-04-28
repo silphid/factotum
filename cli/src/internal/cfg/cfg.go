@@ -49,37 +49,6 @@ func Load(file string) (Config, error) {
 	return config, nil
 }
 
-// Clone returns a deep-copy of this config
-func (c Config) Clone() Config {
-	var config Config
-	config.Version = c.Version
-	config.Base = c.Base.Clone()
-	config.Contexts = make(map[string]ctx.Context, len(c.Contexts))
-	for key, value := range c.Contexts {
-		config.Contexts[key] = value.Clone()
-	}
-	return config
-}
-
-// Merge creates a deep-copy of this config and copies values from given source config on top of it
-func (c Config) Merge(source Config) Config {
-	config := c.Clone()
-	if source.Version != "" {
-		config.Version = source.Version
-	}
-
-	// Base context
-	config.Base = c.Base.Merge(source.Base)
-
-	// Named contexts
-	for key, value := range source.Contexts {
-		targetContext := config.Contexts[key]
-		config.Contexts[key] = targetContext.Merge(value)
-	}
-
-	return config
-}
-
 // LoadConfigs load both the shared and user config files
 func LoadConfigs(sharedDir, userDir string) (Config, Config, error) {
 	sharedConfig, err := Load(filepath.Join(sharedDir, sharedFileName))
@@ -136,7 +105,7 @@ func getContextNames(sharedConfig, userConfig Config) ([]string, error) {
 func GetContext(sharedDir, userDir, name string) (ctx.Context, error) {
 	// No context
 	if name == ContextNone {
-		return ctx.Context{}, nil
+		return ctx.None, nil
 	}
 
 	sharedConfig, userConfig, err := LoadConfigs(sharedDir, userDir)
@@ -149,6 +118,11 @@ func GetContext(sharedDir, userDir, name string) (ctx.Context, error) {
 // getContext finds shared/user base/named contexts and returns their merged result.
 // If name is "base", only the merged base context is returned.
 func getContext(sharedConfig, userConfig Config, name string) (ctx.Context, error) {
+	// No context
+	if name == ContextNone {
+		return ctx.None, nil
+	}
+
 	// Base contexts
 	baseContext := sharedConfig.Base.Merge(userConfig.Base)
 	if name == ContextBase {

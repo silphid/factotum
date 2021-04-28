@@ -1,4 +1,4 @@
-legistry: ctx3_registry
+registry: ctx3_registry
 image: ctx3_image
 env:
   CTX3: ctx3_ctx3
