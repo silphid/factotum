@@ -1,59 +1,56 @@
 package cfg
 
 import (
+	"fmt"
+	"path/filepath"
 	"reflect"
 	"testing"
 
 	"github.com/go-test/deep"
 	"github.com/silphid/factotum/cli/src/internal/ctx"
+	"github.com/silphid/factotum/cli/src/internal/helpers"
 	_assert "github.com/stretchr/testify/assert"
 )
+
+func loadContext(file string) ctx.Context {
+	path := filepath.Join("testdata", file+".yaml")
+	if !helpers.PathExists(path) {
+		panic(fmt.Errorf("context file not found: %q", path))
+	}
+	context, err := ctx.Load(path)
+	if err != nil {
+		panic(fmt.Errorf("loading context from %q: %w", path, err))
+	}
+	return context
+}
+
+func loadConfig(version, baseFile, ctx1Key, ctx1File, ctx2Key, ctx2File string) Config {
+	return Config{
+		Version: version,
+		Base:    loadContext(baseFile),
+		Contexts: map[string]ctx.Context{
+			ctx1Key: loadContext(ctx1File),
+			ctx2Key: loadContext(ctx2File),
+		},
+	}
+}
+
+func loadConfigWith3Contexts(version, baseFile, ctx1Key, ctx1File, ctx2Key, ctx2File, ctx3Key, ctx3File string) Config {
+	return Config{
+		Version: version,
+		Base:    loadContext(baseFile),
+		Contexts: map[string]ctx.Context{
+			ctx1Key: loadContext(ctx1File),
+			ctx2Key: loadContext(ctx2File),
+			ctx3Key: loadContext(ctx3File),
+		},
+	}
+}
 
 func TestClone(t *testing.T) {
 	assert := _assert.New(t)
 
-	original := Config{
-		Version: "version",
-		Base: ctx.Context{
-			Registry: ctx.RegistryECR,
-			Image:    "image",
-			Env: map[string]string{
-				"ENV1": "value1",
-				"ENV2": "value2",
-			},
-			Volumes: map[string]string{
-				"/local/volume1": "/container/volume1",
-				"/local/volume2": "/container/volume2",
-			},
-		},
-		Contexts: map[string]ctx.Context{
-			"ctx1": {
-				Registry: ctx.RegistryECR,
-				Image:    "image1",
-				Env: map[string]string{
-					"ENV1": "value1",
-					"ENV2": "value2",
-				},
-				Volumes: map[string]string{
-					"/local/volume1": "/container/volume1",
-					"/local/volume2": "/container/volume2",
-				},
-			},
-			"ctx2": {
-				Registry: ctx.RegistryECR,
-				Image:    "image1",
-				Env: map[string]string{
-					"ENV3": "value3",
-					"ENV4": "value4",
-				},
-				Volumes: map[string]string{
-					"/local/volume3": "/container/volume3",
-					"/local/volume4": "/container/volume4",
-				},
-			},
-		},
-	}
-
+	original := loadConfig("version1", "base1", "ctx1", "ctx1", "ctx2", "ctx2")
 	clone := original.Clone()
 
 	diff := deep.Equal(original, clone)
@@ -73,48 +70,7 @@ func TestClone(t *testing.T) {
 func TestMergingEmptyFieldsLeavesUnchanged(t *testing.T) {
 	assert := _assert.New(t)
 
-	config1 := Config{
-		Version: "version1",
-		Base: ctx.Context{
-			Registry: ctx.RegistryECR,
-			Image:    "image",
-			Env: map[string]string{
-				"ENV1": "value1",
-				"ENV2": "value2",
-			},
-			Volumes: map[string]string{
-				"/local/volume1": "/container/volume1",
-				"/local/volume2": "/container/volume2",
-			},
-		},
-		Contexts: map[string]ctx.Context{
-			"ctx1": {
-				Registry: ctx.RegistryGCR,
-				Image:    "image1",
-				Env: map[string]string{
-					"ENV1": "value1",
-					"ENV2": "value2",
-				},
-				Volumes: map[string]string{
-					"/local/volume1": "/container/volume1",
-					"/local/volume2": "/container/volume2",
-				},
-			},
-			"ctx2": {
-				Registry: ctx.RegistryDockerHub,
-				Image:    "image2",
-				Env: map[string]string{
-					"ENV3": "value3",
-					"ENV4": "value4",
-				},
-				Volumes: map[string]string{
-					"/local/volume3": "/container/volume3",
-					"/local/volume4": "/container/volume4",
-				},
-			},
-		},
-	}
-
+	config1 := loadConfig("version1", "base1", "ctx1", "ctx1", "ctx2", "ctx2")
 	config2 := Config{}
 	merged := config1.Merge(config2)
 
@@ -127,148 +83,9 @@ func TestMergingEmptyFieldsLeavesUnchanged(t *testing.T) {
 func TestMerge(t *testing.T) {
 	assert := _assert.New(t)
 
-	config1 := Config{
-		Version: "version1",
-		Base: ctx.Context{
-			Registry: ctx.RegistryECR,
-			Image:    "image",
-			Env: map[string]string{
-				"ENV1": "value1",
-				"ENV2": "value2",
-			},
-			Volumes: map[string]string{
-				"/local/volume1": "/container/volume1",
-				"/local/volume2": "/container/volume2",
-			},
-		},
-		Contexts: map[string]ctx.Context{
-			"ctx1": {
-				Registry: ctx.RegistryGCR,
-				Image:    "image1",
-				Env: map[string]string{
-					"ENV1": "value1",
-					"ENV2": "value2",
-				},
-				Volumes: map[string]string{
-					"/local/volume1": "/container/volume1",
-					"/local/volume2": "/container/volume2",
-				},
-			},
-			"ctx2": {
-				Registry: ctx.RegistryDockerHub,
-				Image:    "image2",
-				Env: map[string]string{
-					"ENV3": "value3",
-					"ENV4": "value4",
-				},
-				Volumes: map[string]string{
-					"/local/volume3": "/container/volume3",
-					"/local/volume4": "/container/volume4",
-				},
-			},
-		},
-	}
-
-	config2 := Config{
-		Version: "version2",
-		Base: ctx.Context{
-			Registry: ctx.RegistryGCR,
-			Image:    "image2",
-			Env: map[string]string{
-				"ENV1": "value1b",
-				"ENV3": "value3",
-			},
-			Volumes: map[string]string{
-				"/local/volume1": "/container/volume1b",
-				"/local/volume3": "/container/volume3",
-			},
-		},
-		Contexts: map[string]ctx.Context{
-			"ctx1": {
-				Registry: ctx.RegistryECR,
-				Image:    "image2",
-				Env: map[string]string{
-					"ENV1": "value1b",
-					"ENV3": "value3",
-				},
-				Volumes: map[string]string{
-					"/local/volume1": "/container/volume1b",
-					"/local/volume3": "/container/volume3",
-				},
-			},
-			"ctx3": {
-				Registry: ctx.RegistryDockerHub,
-				Image:    "image3",
-				Env: map[string]string{
-					"ENV5": "value5",
-					"ENV6": "value6",
-				},
-				Volumes: map[string]string{
-					"/local/volume5": "/container/volume5",
-					"/local/volume6": "/container/volume6",
-				},
-			},
-		},
-	}
-
-	expected := Config{
-		Version: "version2",
-		Base: ctx.Context{
-			Registry: ctx.RegistryGCR,
-			Image:    "image2",
-			Env: map[string]string{
-				"ENV1": "value1b",
-				"ENV2": "value2",
-				"ENV3": "value3",
-			},
-			Volumes: map[string]string{
-				"/local/volume1": "/container/volume1b",
-				"/local/volume2": "/container/volume2",
-				"/local/volume3": "/container/volume3",
-			},
-		},
-		Contexts: map[string]ctx.Context{
-			"ctx1": {
-				Registry: ctx.RegistryECR,
-				Image:    "image2",
-				Env: map[string]string{
-					"ENV1": "value1b",
-					"ENV2": "value2",
-					"ENV3": "value3",
-				},
-				Volumes: map[string]string{
-					"/local/volume1": "/container/volume1b",
-					"/local/volume2": "/container/volume2",
-					"/local/volume3": "/container/volume3",
-				},
-			},
-			"ctx2": {
-				Registry: ctx.RegistryDockerHub,
-				Image:    "image2",
-				Env: map[string]string{
-					"ENV3": "value3",
-					"ENV4": "value4",
-				},
-				Volumes: map[string]string{
-					"/local/volume3": "/container/volume3",
-					"/local/volume4": "/container/volume4",
-				},
-			},
-			"ctx3": {
-				Registry: ctx.RegistryDockerHub,
-				Image:    "image3",
-				Env: map[string]string{
-					"ENV5": "value5",
-					"ENV6": "value6",
-				},
-				Volumes: map[string]string{
-					"/local/volume5": "/container/volume5",
-					"/local/volume6": "/container/volume6",
-				},
-			},
-		},
-	}
-
+	config1 := loadConfig("version1", "base1", "ctx1", "ctx1", "ctx2", "ctx2")
+	config2 := loadConfig("version2", "base1b", "ctx1", "ctx1b", "ctx3", "ctx3")
+	expected := loadConfigWith3Contexts("version2", "base1_base1b", "ctx1", "ctx1_ctx1b", "ctx2", "ctx2", "ctx3", "ctx3")
 	merged := config1.Merge(config2)
 
 	diff := deep.Equal(merged, expected)
@@ -283,4 +100,59 @@ func assertNotSameMapStringString(t *testing.T, map1, map2 map[string]string, ms
 
 func assertNotSameMapStringContext(t *testing.T, map1, map2 map[string]ctx.Context, msgAndArgs ...interface{}) {
 	_assert.NotEqual(t, reflect.ValueOf(map1).Pointer(), reflect.ValueOf(map2).Pointer(), msgAndArgs)
+}
+
+func TestResolveContextFromConfigs(t *testing.T) {
+	assert := _assert.New(t)
+
+	sharedConfig := loadConfig("version1", "base1", "ctx1", "ctx1", "ctx2", "ctx2")
+	userConfig := loadConfig("version2", "base1b", "ctx1", "ctx1b", "ctx3", "ctx3")
+
+	cases := []struct {
+		name     string
+		expected string
+		error    string
+	}{
+		{
+			name:     "ctx1",
+			expected: "base1_base1b_ctx1_ctx1b",
+		},
+		{
+			name:     "ctx2",
+			expected: "base1_base1b_ctx2",
+		},
+		{
+			name:     "ctx3",
+			expected: "base1_base1b_ctx3",
+		},
+		{
+			name:     "base",
+			expected: "base1_base1b",
+		},
+		{
+			name:     "none",
+			expected: "none",
+		},
+		{
+			name:  "not_found",
+			error: "temp not found",
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			expected := loadContext(c.expected)
+			actual, err := getContext(sharedConfig, userConfig, c.name)
+
+			if c.error != "" {
+				assert.NotNil(err)
+				assert.Equal(c.error, err.Error())
+			} else {
+				assert.NoError(err)
+				if diff := deep.Equal(expected, actual); diff != nil {
+					t.Error(diff)
+				}
+			}
+		})
+	}
 }

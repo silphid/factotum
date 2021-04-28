@@ -106,3 +106,12 @@ contexts:
   - Downloads tar.gz file for latest build of cli for current OS and architecture
   - Decompresses and copies to /usr/local/bin
   - Runs `factotum upgrade`
+
+# Todo
+
+- Refactor context resolution/merging order:
+  - Shared base context
+  - User base context
+  - Shared named context
+  - User named context
+- Finish new file-based unit tests + resolution test

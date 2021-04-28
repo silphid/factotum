@@ -1,5 +1,13 @@
 package ctx
 
+import (
+	"fmt"
+	"io/ioutil"
+
+	"github.com/silphid/factotum/cli/src/internal/helpers"
+	"gopkg.in/yaml.v2"
+)
+
 // RegistryType represents the type of docker registry factotum image should be retrieved from
 type RegistryType string
 
@@ -15,6 +23,25 @@ type Context struct {
 	Image    string
 	Env      map[string]string
 	Volumes  map[string]string
+}
+
+// Load loads the context from given file
+func Load(file string) (Context, error) {
+	var context Context
+	if !helpers.PathExists(file) {
+		return context, nil
+	}
+
+	buf, err := ioutil.ReadFile(file)
+	if err != nil {
+		return context, fmt.Errorf("loading context file: %w", err)
+	}
+	err = yaml.Unmarshal(buf, &context)
+	if err != nil {
+		return context, fmt.Errorf("unmarshalling yaml of context file %q: %w", file, err)
+	}
+
+	return context, nil
 }
 
 // Clone returns a deep-copy of this context

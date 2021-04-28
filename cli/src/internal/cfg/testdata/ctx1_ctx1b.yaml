@@ -1,0 +1,12 @@
+registry: ctx1b_registry
+image: ctx1b_image
+env:
+  CTX1: ctx1b_env
+  ENV1: ctx1b_env1
+  ENV2: ctx1_env2
+  ENV3: ctx1b_env3
+volumes:
+  /local/ctx1: /container/ctx1b_ctx1
+  /local/volume1: /container/ctx1b_volume1
+  /local/volume2: /container/ctx1_volume2
+  /local/volume3: /container/ctx1b_volume3
