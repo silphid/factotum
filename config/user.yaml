@@ -13,7 +13,7 @@
 #   CLOUD: aws # supported clouds: aws, gcp
 #   REGION: us-east-1
 
-# volumes:
+# mounts:
 #   $HOME/.ssh: /root/.ssh
 #   $HOME/.gitconfig: /root/.gitconfig
 #   $HOME/.aws: /root/.aws

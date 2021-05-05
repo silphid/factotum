@@ -1,31 +1,42 @@
 # Commands
 
-- factotum use [context or "base" or "none"]
+- `factotum use [context or "base" or "none"]`
   - validates context
   - saves context in `~/.factotum/state.yaml`
   - omitting context prompts for context from list of available contexts + "base" + "none"
-- factotum start [context or "base"]
-  - omitting context uses current context or prompts for context
+- `factotum start [context or "base" or "none" or "?"]`
   - reads `~/.factotum/state.yaml`
+  - omitting context uses default context (if default not set or "?", prompts for context)
   - if no version set yet, does a `factotum upgrade`
   - merges env vars and volume mounts from `shared.yaml` and `user.yaml`
   - keep only volume mounts that exist locally
   - starts docker container
-- factotum stop [context or "base" or "none" or "all"]
+- `factotum stop [context or "base" or "none" or "all"]`
   - omitting context prompts for context
-- factotum list
-  - contexts
+- `factotum get`
+  - `contexts`
     - lists available contexts
-  - containers
+  - `containers`
     - lists active containers
-- factotum pull
-  - pulls latest factotum config git repo
-- factotum remove
-  - stops all running containers
+  - `clone`
+    - displays clone dir
+  - `context`
+    - displays current context
+  - `tag`
+    - displays current image tag
+- `factotum set VAR VALUE`
+  - `clone`
+    - sets `clone` variable in `~/.factotum/state.yaml`
+- `factotum git CMD ARGS...`
+  - executes given git command within factotum clone directory
+  - ie: `factotum git pull` pulls latest factotum config git repo
+- `factotum remove [context or "all"]`
+  - omitting context prompts for context
+  - stops running containers
   - deletes factotum docker images and containers
-- factotum upgrade
+- `factotum upgrade`
   - discovers latest version of factotum docker image
-  - stores latest version number in `~/.factotum/state.yaml`
+  - stores latest image version number in `~/.factotum/state.yaml`
   - docker pull latest version
 
 ## Global flags
@@ -51,9 +62,9 @@
 
 ```yaml
 version: 2021.04
-cloneDir: /Users/mathieu/dev/factotum
-imageVersion: 1.2.3
-currentContext: cluster1
+clone: /Users/mathieu/dev/factotum
+tag: 1.2.3
+context: cluster1
 ```
 
 # Config files format
@@ -62,12 +73,13 @@ currentContext: cluster1
 base:
   registry: dockerhub # supported values are `gcr`, `ecr` and `dockerhub`
   image: silphid/factotum
+  container: factotum
 
   env:
     CLOUD: aws # supported clouds: aws, gcp
     REGION: us-east-1
 
-  volumes:
+  mounts:
     $HOME/.ssh: /root/.ssh
     $HOME/.gitconfig: /root/.gitconfig
     $HOME/.aws: /root/.aws
@@ -102,13 +114,15 @@ contexts:
 - User clones factotum git repo to folder where it will permanently reside
 - From repo root, user runs `./install.sh`, which does:
   - Copies git repo `/config/user.yaml` to `~/.factotum/user.yaml`
-  - Creates `~/.factotum/
+  - Creates `~/.factotum/` (if doesn't already exist)
   - Downloads tar.gz file for latest build of cli for current OS and architecture
   - Decompresses and copies to /usr/local/bin
+  - Runs `factotum set clone DIR`, which saves clone dir to `~/.factotum/state.yaml`
   - Runs `factotum upgrade`
 
 # Todo
 
+- Remove "none" context
 - Add support for multiple images (other than factotum)
   - Sub-folders under `~/.factotum` and git `/config` that can specify extra
     `user.yaml` and `shared.yaml` files.

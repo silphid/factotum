@@ -4,7 +4,7 @@ env:
   BASE2: base2_base2
   ENV1: base2_env1
   ENV3: base2_env3
-volumes:
+mounts:
   /local/base2: /container/base2_base2
-  /local/volume1: /container/base2_volume1
-  /local/volume3: /container/base2_volume3
+  /local/mount1: /container/base2_mount1
+  /local/mount3: /container/base2_mount3

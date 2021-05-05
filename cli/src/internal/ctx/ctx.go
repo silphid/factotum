@@ -19,15 +19,17 @@ const (
 
 // Context represents an execution context for factotum (env vars and volumes)
 type Context struct {
-	Registry RegistryType
-	Image    string
-	Env      map[string]string
-	Volumes  map[string]string
+	Name      string `yaml:"-"`
+	Registry  RegistryType
+	Image     string
+	Container string `default:"factotum"`
+	Env       map[string]string
+	Mounts    map[string]string
 }
 
 var None = Context{
-	Env:     make(map[string]string),
-	Volumes: make(map[string]string),
+	Env:    make(map[string]string),
+	Mounts: make(map[string]string),
 }
 
 // Load loads the context from given file
@@ -52,19 +54,21 @@ func Load(file string) (Context, error) {
 // Clone returns a deep-copy of this context
 func (c Context) Clone() Context {
 	context := Context{
-		Registry: c.Registry,
-		Image:    c.Image,
-		Env:      make(map[string]string),
-		Volumes:  make(map[string]string),
+		Registry:  c.Registry,
+		Container: c.Container,
+		Name:      c.Name,
+		Image:     c.Image,
+		Env:       make(map[string]string),
+		Mounts:    make(map[string]string),
 	}
 
 	for key, value := range c.Env {
 		context.Env[key] = value
 	}
 
-	// Volumes
-	for key, value := range c.Volumes {
-		context.Volumes[key] = value
+	// Mounts
+	for key, value := range c.Mounts {
+		context.Mounts[key] = value
 	}
 
 	return context
@@ -90,8 +94,8 @@ func (c Context) Merge(source Context) Context {
 	}
 
 	// Volumes
-	for key, value := range source.Volumes {
-		context.Volumes[key] = value
+	for key, value := range source.Mounts {
+		context.Mounts[key] = value
 	}
 
 	return context

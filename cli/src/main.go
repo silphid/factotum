@@ -1,14 +1,16 @@
 package main
 
-// import (
-// 	"os"
-// )
+import (
+	"os"
 
-// var version string
+	"github.com/silphid/factotum/cli/src/cmd"
+)
+
+var version string
 
 func main() {
-	// rootCmd := cmd.NewRoot(version)
-	// if err := rootCmd.Execute(); err != nil {
-	// 	os.Exit(-1)
-	// }
+	rootCmd := cmd.NewRoot(version)
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(-1)
+	}
 }

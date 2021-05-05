@@ -1,4 +1,4 @@
 registry:
 image:
 env: {}
-volumes: {}
+mounts: {}

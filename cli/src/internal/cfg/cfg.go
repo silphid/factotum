@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	currentVersion = "2021.04"
+	currentVersion = "2021.05"
 	sharedFileName = "shared.yaml"
 	userFileName   = "user.yaml"
 	ContextBase    = "base"
@@ -24,6 +24,12 @@ type Config struct {
 	Version  string
 	Base     ctx.Context
 	Contexts map[string]ctx.Context
+}
+
+var Empty = Config{
+	Version:  currentVersion,
+	Base:     ctx.None,
+	Contexts: make(map[string]ctx.Context),
 }
 
 // Load loads the config file from given file
@@ -137,5 +143,7 @@ func getContext(sharedConfig, userConfig Config, name string) (ctx.Context, erro
 	}
 
 	// Merge contexts
-	return baseContext.Merge(sharedNamedContext).Merge(userNamedContext), nil
+	context := baseContext.Merge(sharedNamedContext).Merge(userNamedContext)
+	context.Name = name
+	return context, nil
 }
