@@ -30,8 +30,8 @@
 - `factotum git CMD ARGS...`
   - executes given git command within factotum clone directory
   - ie: `factotum git pull` pulls latest factotum config git repo
-- `factotum remove [context or "all"]`
-  - omitting context prompts for context
+- `factotum remove/rm [context or "" or "?" or "all"]`
+  - omitting context uses default, "?" prompts for context
   - stops running containers
   - deletes factotum docker images and containers
 - `factotum upgrade`
@@ -129,3 +129,6 @@ contexts:
   - The sub-folder name can be used as a prefix to the context name (ie:
     `image1/context1`) or we add an extra `factotum image {image1}` command to
     select it?
+- Detect current directory on local machine, find equivalent directory (if any)
+  in container by looking at all bind mounts and use that as initial current directory
+  (and try using Docker's option for specifying startup dir instead of old approach)

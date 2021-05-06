@@ -11,6 +11,7 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	"github.com/mitchellh/go-homedir"
 	"github.com/silphid/factotum/cli/src/internal/ctx"
 )
 
@@ -19,69 +20,72 @@ const (
 )
 
 func Start(c ctx.Context, imageTag string) error {
-	cli, err := client.NewClientWithOpts()
+	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return err
+	}
+
+	if c.Container == "" {
+		c.Container = "factotum"
 	}
 
 	containerName := fmt.Sprintf("%s-%s-%s-%s", factotumContainerPrefix, c.Container, c.Name, imageTag)
-
-	// Is container created?
-	isCreated, err := isContainerCreated(cli, containerName)
+	container, err := getContainer(cli, containerName)
 	if err != nil {
 		return err
 	}
-	if isCreated {
-		isRunning, err := isContainerRunning(cli, containerName)
-		if err != nil {
-			return err
-		}
-		if isRunning {
-			// Running
-			fmt.Printf("Running")
-		} else {
-			// Created
-			fmt.Printf("Created")
-		}
-	} else {
-		// Absent
-		fmt.Printf("Absent")
-		err := createContainer(cli, c, containerName)
+
+	if container == nil {
+		fmt.Printf("Creating container\n")
+		container, err = createContainer(cli, c, containerName)
 		if err != nil {
 			return err
 		}
 	}
+
+	fmt.Printf("Status: %s\n", container.Status)
+	fmt.Printf("State: %s\n", container.State)
+
+	err = cli.ContainerStart(context.Background(), container.ID, types.ContainerStartOptions{})
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Status: %s\n", container.Status)
+	fmt.Printf("State: %s\n", container.State)
 
 	return nil
 }
 
-func isContainerRunning(cli *client.Client, name string) (bool, error) {
-	return isContainerListed(cli, name, false)
-}
-
-func isContainerCreated(cli *client.Client, name string) (bool, error) {
-	return isContainerListed(cli, name, true)
-}
-
-func isContainerListed(cli *client.Client, name string, all bool) (bool, error) {
+func getContainer(cli *client.Client, name string) (*types.Container, error) {
 	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{
-		All: all,
+		All: true,
 		Filters: filters.NewArgs(
 			filters.Arg("name", name)),
 	})
 	if err != nil {
-		return false, err
+		return nil, err
 	}
-	return len(containers) > 0, nil
+
+	if len(containers) > 0 {
+		return &containers[0], nil
+	}
+	return nil, nil
 }
 
-func createContainer(cli *client.Client, c ctx.Context, name string) error {
+func createContainer(cli *client.Client, c ctx.Context, name string) (*types.Container, error) {
+	home, err := homedir.Dir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to detect user home directory: %w", err)
+	}
+
 	mounts := make([]mount.Mount, 0)
-	for k, v := range c.Mounts {
+	for source, target := range c.Mounts {
+		source = strings.ReplaceAll(source, "$HOME", home)
 		mounts = append(mounts, mount.Mount{
 			Type:   mount.TypeBind,
-			Source: k,
-			Target: v,
+			Source: source,
+			Target: target,
 		})
 	}
 
@@ -90,19 +94,19 @@ func createContainer(cli *client.Client, c ctx.Context, name string) error {
 		AttachStdout: true,
 		AttachStderr: true,
 		Tty:          true,
+		Entrypoint:   []string{"zsh"},
 	}
 	hostConfig := container.HostConfig{
 		Mounts: mounts,
 	}
 	networkingConfig := network.NetworkingConfig{}
 
-	body, err := cli.ContainerCreate(context.Background(), &config, &hostConfig, &networkingConfig, nil, name)
+	_, err = cli.ContainerCreate(context.Background(), &config, &hostConfig, &networkingConfig, nil, name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	fmt.Printf("Created container ID: %s\n", body.ID)
-	return nil
+	return getContainer(cli, name)
 }
 
 func ListContainers() error {

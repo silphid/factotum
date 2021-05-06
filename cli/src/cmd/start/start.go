@@ -1,4 +1,4 @@
-package use
+package start
 
 import (
 	"github.com/silphid/factotum/cli/src/internal/core"

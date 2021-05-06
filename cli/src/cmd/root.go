@@ -3,7 +3,9 @@ package cmd
 import (
 	"github.com/silphid/factotum/cli/src/cmd/get"
 	"github.com/silphid/factotum/cli/src/cmd/set"
+	"github.com/silphid/factotum/cli/src/cmd/start"
 	"github.com/silphid/factotum/cli/src/cmd/use"
+	"github.com/silphid/factotum/cli/src/cmd/versioning"
 	"github.com/silphid/factotum/cli/src/internal/logging"
 	"github.com/spf13/cobra"
 )
@@ -22,5 +24,7 @@ func NewRoot(version string) *cobra.Command {
 	c.AddCommand(get.New())
 	c.AddCommand(set.New())
 	c.AddCommand(use.New())
+	c.AddCommand(start.New())
+	c.AddCommand(versioning.New(version))
 	return c
 }

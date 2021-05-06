@@ -2,7 +2,7 @@ version: 2021.05
 
 base:
   registry: dockerhub # supported values are `gcr`, `ecr` and `dockerhub`
-  image: silphid/factotum
+  image: gcr.io/nesto-ci-78a3f2e6/infra/factotum
 
   env:
     CLOUD: aws # supported clouds: aws, gcp

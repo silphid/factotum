@@ -22,7 +22,7 @@ type Context struct {
 	Name      string `yaml:"-"`
 	Registry  RegistryType
 	Image     string
-	Container string `default:"factotum"`
+	Container string
 	Env       map[string]string
 	Mounts    map[string]string
 }
@@ -81,6 +81,11 @@ func (c Context) Merge(source Context) Context {
 	// Registry
 	if source.Registry != "" {
 		context.Registry = source.Registry
+	}
+
+	// Container
+	if source.Container != "" {
+		context.Container = source.Container
 	}
 
 	// Image

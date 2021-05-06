@@ -32,7 +32,7 @@ var Empty = Config{
 	Contexts: make(map[string]ctx.Context),
 }
 
-// Load loads the config file from given file
+// Load loads config from given file
 func Load(file string) (Config, error) {
 	var config Config
 	if !helpers.PathExists(file) {
