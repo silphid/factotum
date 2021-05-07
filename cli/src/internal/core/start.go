@@ -1,8 +1,8 @@
 package core
 
 import (
+	"github.com/silphid/factotum/cli/src/internal/contain"
 	"github.com/silphid/factotum/cli/src/internal/ctx"
-	"github.com/silphid/factotum/cli/src/internal/docker"
 	"github.com/silphid/factotum/cli/src/internal/statefile"
 )
 
@@ -15,7 +15,7 @@ func (c Core) Start(contextName string) error {
 	if err != nil {
 		return err
 	}
-	return docker.Start(context, state.ImageTag)
+	return contain.Start(context, state.ImageTag)
 }
 
 func (c Core) getOrPromptContext(state statefile.State, name string) (ctx.Context, error) {
