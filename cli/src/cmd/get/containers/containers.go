@@ -1,7 +1,7 @@
 package containers
 
 import (
-	"github.com/silphid/factotum/cli/src/internal/docker"
+	"github.com/silphid/factotum/cli/src/internal/docker/api"
 	"github.com/spf13/cobra"
 )
 
@@ -18,5 +18,5 @@ func New() *cobra.Command {
 }
 
 func run() error {
-	return docker.ListContainers()
+	return api.ListContainers()
 }
