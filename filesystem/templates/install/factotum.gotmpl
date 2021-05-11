@@ -151,6 +151,9 @@ function use() {
     DOCKER_ARGS+=(--volume "$ITEM")
   done
 
+  # Use local networking
+  DOCKER_ARGS+=(--network=host)
+
 	trap run_exit_hooks EXIT
 	# the extra curly braces around .ID are because this file gets rendered as a go template before being installed as a shell script
 	container_id=$(docker ps --quiet --filter name="^/${DOCKER_CONTAINER}\$" --format '{{`{{ .ID }}`}}')
