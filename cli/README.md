@@ -10,6 +10,7 @@
   - if no version set yet, does a `factotum upgrade`
   - merges env vars and volume mounts from `shared.yaml` and `user.yaml`
   - keep only volume mounts that exist locally
+  - if tag is `latest` or `""` does a forced pull
   - starts docker container
 - `factotum stop [context or "base" or "none" or "all"]`
   - omitting context prompts for context
@@ -18,26 +19,25 @@
     - lists available contexts
   - `containers`
     - lists active containers
-  - `clone`
-    - displays clone dir
   - `context`
     - displays current context
-  - `tag`
-    - displays current image tag
-- `factotum set VAR VALUE`
-  - `clone`
-    - sets `clone` variable in `~/.factotum/state.yaml`
-- `factotum git CMD ARGS...`
-  - executes given git command within factotum clone directory
-  - ie: `factotum git pull` pulls latest factotum config git repo
 - `factotum remove/rm [context or "" or "?" or "all"]`
   - omitting context uses default, "?" prompts for context
   - stops running containers
   - deletes factotum docker images and containers
-- `factotum upgrade`
-  - discovers latest version of factotum docker image
-  - stores latest image version number in `~/.factotum/state.yaml`
-  - docker pull latest version
+- `factotum install [ARGS...]`
+  - prompts user for all install properties not passed as arguments
+    - Do you want to configure a git repo from which to load remote shared configs?
+      - Base URL to raw config git repo config files
+      - Git token
+        - Maybe we can automate that process/flow!
+          Something like: https://github.com/chrisdickinson/get-github-token
+          There must be a way to pop a browser and have github (or other) prompt
+          user to authorize factotum and automatically create a token, like
+          for google cloud?
+  - stores answers in `~/.factotum/state.yaml`
+  - if remote shared configs configured, copy `user.yaml` to `~/.factotum/`
+    (only if doesn't already exist)
 
 ## Global flags
 
@@ -48,6 +48,20 @@
   - Only displays shell commands that it would execute normally
   - Automatically turns-on verbose mode
 
+# Git repos
+
+- `factotum-containers.git`: monorepo with multiple Dockerfiles, all built individually
+  and pushed to dockerhub.
+  - `/base/`: Docker image with minimum functionality (injection...)
+  - `/devops/`: FROM factotum-base + kubectl, k9s, helm, helmfile...
+  - `/go/`: FROM factotum-devops + go sdk
+  - `/node/`: FROM factotum-devops + node, TS...
+  - `/totum/`: FROM factotum-devops + go + node...
+- `factotum-config.git`: repo to be optionally forked and customized by user/company.
+  - `/shared.yaml`
+  - `/user.yaml`
+- `factotum-cli.git`: the factotum cli go source code, installable via `go install` or `curl ...`.
+
 # Config files structure
 
 - ~/.factotum/
@@ -57,13 +71,15 @@
   - config
     - shared.yaml: base configs shared by all users
     - user.yaml: default user config file copied to home during install
+- In any parent folder (v2?)
+  - .factotumrc
 
 # ~/.factotum/state.yaml file format
 
 ```yaml
 version: 2021.04
-clone: /Users/mathieu/dev/factotum
-tag: 1.2.3
+remote: https://github.com/asdf/asdf
+token: jasd5DasdmYdndIIiD333Mdojasd5DasdmYdndIIiD333Mdodd
 context: cluster1
 ```
 
@@ -73,7 +89,8 @@ context: cluster1
 base:
   registry: dockerhub # supported values are `gcr`, `ecr` and `dockerhub`
   image: silphid/factotum
-  container: factotum
+  tag: latest
+  container: factotum # container name for the XXX part: factotum-XXX-context-tag
 
   env:
     CLOUD: aws # supported clouds: aws, gcp
@@ -98,27 +115,13 @@ contexts:
 
 # Installation
 
-## Factotum git repo structure
-
-- cli
-  - go cli source code
-- docker
-  - Dockerfile + image source files
-- config
-  - user.yaml (default user-specific config copied to ~/.factotum/user.yaml, if not already existing)
-  - shared.yaml (shared across organisation/teams)
-- install.sh
-
-## Process
-
-- User clones factotum git repo to folder where it will permanently reside
-- From repo root, user runs `./install.sh`, which does:
-  - Copies git repo `/config/user.yaml` to `~/.factotum/user.yaml`
-  - Creates `~/.factotum/` (if doesn't already exist)
-  - Downloads tar.gz file for latest build of cli for current OS and architecture
-  - Decompresses and copies to /usr/local/bin
-  - Runs `factotum set clone DIR`, which saves clone dir to `~/.factotum/state.yaml`
-  - Runs `factotum upgrade`
+- User installs factotum cli binary, either by:
+  - `$ go install github.com/silphid/factotum-cli`
+  - `$ brew install factotum`
+  - `$ curl https://github.com/silphid/factotum-cli/raw/.../install.sh | bash`
+- User then configures factotum via:
+  - `$ factotum install` (see "Commands" section above)
+  - (the brew and curl options could maybe run this automatically after installing the binary?)
 
 # Todo
 
